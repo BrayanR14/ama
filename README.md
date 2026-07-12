@@ -1,3 +1,10 @@
+*Version*
+- update
+- test
+- function
+- design
+- delete
+
 ---
 name: Django Hello World
 slug: django-hello-world
