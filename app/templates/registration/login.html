@@ -1,0 +1,14 @@
+{% load static %}
+
+{% block title %}Inicio de sesion - Arte Galería{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h2>Iniciar Sesión</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+    </div>
+{% endblock %}

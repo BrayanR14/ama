@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Galería{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>Galeria</h1>
+        <p>Descubre nuestra colección única de obras de arte.</p>
+    </div>
+    <div class="container">
+        <img src="path/to/image.jpg" alt="Descripción de la imagen">
+        <img src="path/to/image.jpg" alt="Descripción de la imagen">
+        <img src="path/to/image.jpg" alt="Descripción de la imagen">
+    </div>
+    <div class="container">
+        <img src="path/to/image.jpg" alt="Descripción de la imagen">
+        <img src="path/to/image.jpg" alt="Descripción de la imagen">
+        <img src="path/to/image.jpg" alt="Descripción de la imagen">
+        <a href="{% url 'about' %}">Sobre Nosotros</a>
+    </div>
+{% endblock %}
