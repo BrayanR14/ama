@@ -4,7 +4,7 @@ from . import views
 
 
 urlpatterns = [
-    path('app', views.index, name="index"),
+    path('', views.index, name="index"),
     path('galery', views.Galery, name="galery"),
     path('about', views.About, name="about"),
     #rutas de login, logout, password reset, etc
