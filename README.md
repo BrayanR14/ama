@@ -1,3 +1,6 @@
+** Author **
+Brayan Rojas
+
 *Version*
 - update
 - test

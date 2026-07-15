@@ -7,9 +7,35 @@
         <p>Descubre nuestra colección única de obras de arte.</p>
     </div>
     <div class="container">
-        <img src="path/to/image.jpg" alt="Descripción de la imagen">
-        <img src="path/to/image.jpg" alt="Descripción de la imagen">
-        <img src="path/to/image.jpg" alt="Descripción de la imagen">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold">Exclusive Collection</h1>
+            <p class="text-muted">Discover unique digital masterpieces from world-class creators.</p>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="row g-4">
+            {% for product in products %}
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card gallery-card h-100">
+                    <img src="{{ product.image }}" class="card-img-top art-img" alt="{{ product.title }}">
+                    <div class="card-body px-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">{{ product.title }}</h5>
+                            <span class="badge bg-light text-dark">{{ product.price }}</span>
+                        </div>
+                        <p class="text-muted small">by Premium Artist</p>
+                        <div class="d-grid mt-3">
+                            <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-dark btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <p>No products found in the collection.</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     <div class="container">
         <img src="path/to/image.jpg" alt="Descripción de la imagen">
