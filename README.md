@@ -1,5 +1,5 @@
-AMA
-### Objective
+# AMA
+## Objectivos
 
 El objetivo de nuestra pagina web es ofrecer arte unico en cada una de sus piezas.
 
@@ -7,7 +7,7 @@ El objetivo de nuestra pagina web es ofrecer arte unico en cada una de sus pieza
 
 python manage.py runserver
 
-# Author 
+### Author 
 Brayan Rojas
 
 *Version*
@@ -24,13 +24,9 @@ Commandos
 
 - git clone 
 
-#  Staick
+##  Staick
 
 Django
-
-## Demo
-
-https://django-template.vercel.app/
 
 ## Setting the Secret Key
 
