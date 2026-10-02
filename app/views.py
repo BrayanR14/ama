@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from django.db import connection
 
 PRODUCTS = [
     {'id': 1, 'title': 'Prism Flow', 'price': '1.2 ETH', 'image': 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&q=80&w=400', 'description': 'An exploration of light refraction.'},
@@ -14,6 +16,17 @@ PRODUCTS = [
 
 def index(request):
     return render(request, 'index.html')
+
+def health(request):
+    """Endpoint de salud. Seenode / balanceadores lo usan para saber si el
+    contenedor esta vivo. Verifica tambien que la base de datos responda."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+    except Exception as exc:
+        return HttpResponse(f"db error: {exc}", status=503, content_type="text/plain")
+    return HttpResponse("ok", content_type="text/plain")
 
 def galery(request):
     # Fixed case sensitivity for Vercel deployment (Galery.html)
@@ -28,6 +41,14 @@ def product_detail(request, product_id):
     if not product:
         return HttpResponse("Product not found", status=404)
     return render(request, 'product_detail.html', {'product': product})
+
+def checkout(request, product_id):
+    # Placeholder: el boton "Buy Now" apunta aqui. Reemplazar por la
+    # integracion real de pagos mas adelante.
+    product = next((p for p in PRODUCTS if p['id'] == product_id), None)
+    if not product:
+        return HttpResponse("Product not found", status=404)
+    return render(request, 'checkout.html', {'product': product})
 
 def signup(request):
     if request.method == 'POST':

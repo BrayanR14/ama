@@ -5,6 +5,9 @@ __pycache__
 db.sqlite3
 media
 
+# Generado por collectstatic en el build de Docker
+staticfiles/
+
 # Environments
 .env
 .venv

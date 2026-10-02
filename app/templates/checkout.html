@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | {{ product.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body style="background-color:#f8f9fa;">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h1 class="h3 mb-3">Confirmar compra</h1>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <strong>{{ product.title }}</strong><br>
+                                <small class="text-muted">{{ product.description }}</small>
+                            </div>
+                            <span class="fs-4 text-primary fw-bold">{{ product.price }}</span>
+                        </div>
+                        <hr>
+                        <p class="text-muted small mb-3">
+                            El proceso de pago todavia no esta habilitado.
+                        </p>
+                        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-dark">
+                            Volver al producto
+                        </a>
+                        <a href="{% url 'galery' %}" class="btn btn-dark">Volver a la galeria</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

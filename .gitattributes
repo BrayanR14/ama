@@ -1,0 +1,28 @@
+# Los scripts de shell deben conservar LF en Linux, o el shebang
+# falla con "/bin/sh^M: not found" y el contenedor no arranca.
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+
+# Resto de archivos de texto
+*.py text eol=lf
+*.txt text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Archivos binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+# SVG se deja sin conversion para no tocar los assets ya commiteados
+*.svg -text

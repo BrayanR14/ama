@@ -13,20 +13,66 @@ https://docs.djangoproject.com/en/stable/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/stable/howto/deployment/checklist/
+def env_flag(name, default="False"):
+    """Lee booleanos desde variables de entorno de forma tolerante.
+
+    Acepta: "1", "true", "yes", "on" (case-insensitive) -> True
+    """
+    raw = os.environ.get(name, default)
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def env_list(name, default=""):
+    """Lee listas separadas por comas desde variables de entorno."""
+    raw = os.environ.get(name, default)
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+# ---------------------------------------------------------------------------
+# Core / Seguridad
+# ---------------------------------------------------------------------------
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-change-me-in-production")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG") == "False"
+# OJO: antes estaba `== "False"`, lo cual invertia la logica y activaba DEBUG
+# cuando el usuario seteaba DJANGO_DEBUG=False (justo lo contrario de lo deseado).
+DEBUG = env_flag("DJANGO_DEBUG", default="False")
 
-ALLOWED_HOSTS = ["*"]
+# Falla rapido y con un mensaje claro en vez de arrancar con una clave insegura.
+if not DEBUG and SECRET_KEY == "django-insecure-change-me-in-production":
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY no esta definida. Definela en las variables de "
+        "entorno de Seenode antes de desplegar (generala con: "
+        "python -c \"from django.core.management.utils import "
+        'get_random_secret_key as k; print(k())").'
+    )
+
+# Acepta cualquier host por defecto; se puede restringir con DJANGO_ALLOWED_HOSTS.
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "*") or ["*"]
+
+# Dominios https desde los que Django acepta formularios (login/signup).
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
+
+# Seenode pone un proxy inverso delante: Django debe leer el protocolo real de
+# los headers, si no `request.is_secure()` devuelve False y CSRF/reirects fallan.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+if env_flag("DJANGO_SECURE_SSL_REDIRECT", default="False"):
+    SECURE_SSL_REDIRECT = True
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_HSTS_SECONDS = 0 if DEBUG else 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
 
 
 # Application definition
@@ -44,6 +90,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # whitenoise: sirve /static/ directamente desde la app (sin nginx, sin volumen extra)
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -78,7 +126,13 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": os.environ.get("DJANGO_SQLITE_PATH", BASE_DIR / "db.sqlite3"),
+        "OPTIONS": {
+            # timeout evita "database is locked" cuando gunicorn corre varios workers
+            "timeout": 20,
+            # WAL permite lecturas y escrituras simultaneas en sqlite
+            "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
+        },
     }
 }
 
@@ -119,3 +173,11 @@ USE_TZ = True
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = "/static/"
+
+# whitenoise sirve los archivos estaticos comprimidos y con cache desde el propio
+# contenedor. Sin esto, con DEBUG=False Django NO sirve /static/ y la pagina sale
+# sin estilos (y los .css darian 404).
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}

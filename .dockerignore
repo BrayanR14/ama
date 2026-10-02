@@ -1,0 +1,22 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.log
+
+# Entidades y artefactos locales de Vercel
+.vercel
+venv/
+.venv/
+env/
+ENV/
+
+# La base de datos se crea sola al correr migrate en el entrypoint
+db.sqlite3
+
+# Generado por collectstatic en tiempo de build
+staticfiles/
+
+# Archivos de desarrollo
+README.md

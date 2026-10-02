@@ -1,24 +1,37 @@
-# Usa la imagen base de Python que ya tienes
-FROM python:3.14
+# syntax=docker/dockerfile:1
 
-# Variables de entorno para optimizar Python en Docker
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Imagen base: Python slim (más liviana que python:3.14 completo)
+FROM python:3.14-slim
 
-# Crea y establece el directorio de trabajo
-WORKDIR /usr/src/app
+# Variables de entorno
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PORT=8000
 
-# Copia los requerimientos primero (ayuda a que el despliegue sea más rápido si no cambias dependencias)
-COPY requirements.txt /usr/src/app/
+WORKDIR /app
 
-# Instala las dependencias y desactiva la advertencia de root
-RUN pip install --no-cache-dir -r requirements.txt --root-user-action=ignore
+# Copia los requerimientos primero (capa cacheada: si no cambian deps, no reinstala)
+COPY requirements.txt ./
 
-# Copia el resto de tu código al contenedor
-COPY . /usr/src/app/
+# Instala dependencias
+RUN pip install -r requirements.txt --root-user-action=ignore
 
-# Expone el puerto 8000 (estándar para Gunicorn)
+# Copia el código
+COPY . .
+
+# Asegura permisos de ejecucion (el host es Windows y el contexto puede perder el bit +x)
+RUN chmod +x /app/entrypoint.sh
+
+# Genera los archivos estáticos en tiempo de build.
+# whitenoise los sirve en runtime, asi que no se necesita nginx ni volumen extra.
+RUN DJANGO_SECRET_KEY=build-time-placeholder \
+    DJANGO_DEBUG=False \
+    python manage.py collectstatic --noinput
+
+# Puerto que espera el proxy de Seenode
 EXPOSE 8000
 
-# Comando de inicio usando Gunicorn (formato JSON [ ] para evitar la advertencia de OS signals)
-CMD ["gunicorn", "ama.wsgi:application", "--bind", "0.0.0.0:8000"]
+# Arranque: aplica migraciones y luego levanta gunicorn
+CMD ["/app/entrypoint.sh"]
