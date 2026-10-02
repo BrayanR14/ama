@@ -1,3 +1,12 @@
+AMA
+### Objective
+
+El objetivo de nuestra pagina web es ofrecer arte unico en cada una de sus piezas.
+
+## ejecutar proyecto
+
+python manage.py runserver
+
 # Author 
 Brayan Rojas
 
@@ -15,13 +24,9 @@ Commandos
 
 - git clone 
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fpython%2Fdjango&env=DJANGO_SECRET_KEY&envDescription=Secret%20key%20for%20Django%20cryptographic%20signing&demo-title=Django%20%2B%20Vercel&demo-description=Use%20Django%20on%20Vercel%20with%20Serverless%20Functions%20using%20the%20Python%20Runtime.&demo-url=https%3A%2F%2Fdjango-template.vercel.app%2F&demo-image=https://assets.vercel.com/image/upload/v1669994241/random/django.png)
-
 #  Staick
 
-Django + Vercel
-
-This example shows how to use Django on Vercel with Serverless Functions using the [Python Runtime](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/python).
+Django
 
 ## Demo
 
