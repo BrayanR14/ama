@@ -13,8 +13,6 @@ https://docs.djangoproject.com/en/stable/ref/settings/
 import os
 from pathlib import Path
 
-from django.core.exceptions import ImproperlyConfigured
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -38,21 +36,31 @@ def env_list(name, default=""):
 # Core / Seguridad
 # ---------------------------------------------------------------------------
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-change-me-in-production")
-
 # SECURITY WARNING: don't run with debug turned on in production!
 # OJO: antes estaba `== "False"`, lo cual invertia la logica y activaba DEBUG
 # cuando el usuario seteaba DJANGO_DEBUG=False (justo lo contrario de lo deseado).
 DEBUG = env_flag("DJANGO_DEBUG", default="False")
 
-# Falla rapido y con un mensaje claro en vez de arrancar con una clave insegura.
-if not DEBUG and SECRET_KEY == "django-insecure-change-me-in-production":
-    raise ImproperlyConfigured(
-        "DJANGO_SECRET_KEY no esta definida. Definela en las variables de "
-        "entorno de Seenode antes de desplegar (generala con: "
-        "python -c \"from django.core.management.utils import "
-        'get_random_secret_key as k; print(k())").'
+# SECRET_KEY: si no viene del entorno se genera una aleatoria para que el
+# contenedor siempre levante. OJO: al ser aleatoria cambia en cada redespliegue,
+# lo que invalida las sesiones abiertas. Define DJANGO_SECRET_KEY en Seenode
+# para que sea estable.
+_secret_from_env = os.environ.get("DJANGO_SECRET_KEY")
+
+if _secret_from_env:
+    SECRET_KEY = _secret_from_env
+else:
+    from django.core.management.utils import get_random_secret_key
+
+    SECRET_KEY = get_random_secret_key()
+    import warnings
+
+    warnings.warn(
+        "DJANGO_SECRET_KEY no esta definida: se genero una clave aleatoria. "
+        "Las sesiones se invalidan en cada reinicio/despliegue. Define "
+        "DJANGO_SECRET_KEY en las variables de entorno de Seenode.",
+        RuntimeWarning,
+        stacklevel=2,
     )
 
 # Acepta cualquier host por defecto; se puede restringir con DJANGO_ALLOWED_HOSTS.
@@ -177,7 +185,21 @@ STATIC_URL = "/static/"
 # whitenoise sirve los archivos estaticos comprimidos y con cache desde el propio
 # contenedor. Sin esto, con DEBUG=False Django NO sirve /static/ y la pagina sale
 # sin estilos (y los .css darian 404).
+#
+# El backend con manifiesto (hash en el nombre) es el ideal, pero si collectstatic
+# no llego a ejecutarse, {% static %} revienta con
+# "ValueError: Missing staticfiles manifest entry" y TODAS las paginas dan 500.
+# Por eso se elige en runtime segun exista el manifiesto: si falta, se cae al
+# backend sin manifiesto y el sitio sigue sirviendo (solo sin hash de cache).
+_manifest_exists = (Path(STATIC_ROOT) / "staticfiles.json").is_file()
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if _manifest_exists
+            else "whitenoise.storage.CompressedStaticFilesStorage"
+        )
+    },
 }
